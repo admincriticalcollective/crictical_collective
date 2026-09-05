@@ -1,0 +1,25 @@
+{
+  "name": "cc-sync-framer-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "check": "tsc"
+  },
+  "dependencies": {
+    "@framer/plugin": "^4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.9.2",
+    "vite": "^8.0.5",
+    "vite-plugin-framer": "^1.1.0",
+    "vite-plugin-mkcert": "^1.17.8"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "ccsync",
+  "name": "Sanity Articles Sync",
+  "modes": ["configureManagedCollection", "syncManagedCollection"],
+  "icon": "/icon.svg"
+}
