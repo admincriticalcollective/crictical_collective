@@ -6,6 +6,10 @@ The Vercel webhook in `api/sync.js` keeps an unmanaged Framer CMS collection upd
 Sanity. The Framer plugin remains available for manual synchronization into a Managed Collection,
 but the separate Vercel process cannot write to a plugin-owned collection.
 
+Authors are supported through a second unmanaged Framer collection. Create that collection only
+after the code is deployed locally, then set `FRAMER_AUTHORS_COLLECTION_ID` and run
+`npm run framer:configure:authors`.
+
 After the plugin has created the collection, configure `FRAMER_PROJECT_URL`, `FRAMER_API_KEY`, and
 `FRAMER_COLLECTION_ID` in Vercel alongside the Sanity variables. The webhook handles article
 publish/update/delete events and never syncs the gated `body`.
@@ -33,6 +37,14 @@ Sanity  --(webhook / full sync)-->  cc-sync  --(upsert)-->  Airtable  --(Framer 
 Two entry points:
 - `syncAll.js` — one-shot **full re-sync** of every published article.
 - `api/sync.js` — **incremental** webhook (Vercel) that syncs one article on publish/delete.
+
+For the direct unmanaged Framer collections, use `npm run framer:sync:all`. It fetches all
+non-draft articles and authors from Sanity, upserts them by Sanity ID in batches, and removes stale
+items previously owned by this sync. Preview counts without writes using
+`npm run framer:sync:all -- --dry-run`. The command uses 25-item writes and reconnects every 100
+items by default; adjust with `--batch-size` and `--session-size` if needed. This is a local CLI
+task, not a webhook route; it reads credentials from `.env.local` or `.env` in this project. Keep
+the incremental webhook enabled for normal publish/update/delete events after the full sync finishes.
 
 ---
 

@@ -1,0 +1,30 @@
+name: Publish Framer site
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call Framer publish endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "Repository secret CRON_SECRET is not configured" >&2
+            exit 1
+          fi
+          headers=(-H "Authorization: Bearer ${CRON_SECRET}")
+          if [ -n "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            headers+=(-H "x-vercel-protection-bypass: ${VERCEL_AUTOMATION_BYPASS_SECRET}")
+          fi
+          curl --fail --silent --show-error --retry 2 --retry-delay 5 \
+            "${headers[@]}" \
+            "https://cc-sync-eight.vercel.app/api/publish"

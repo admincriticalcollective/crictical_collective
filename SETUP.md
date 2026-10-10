@@ -14,6 +14,31 @@ to its ID, and run `npm run framer:configure` to create the fields. Then deploy 
 Vercel. You need Node.js 18+, a Framer project/API key, an unmanaged collection ID, and a Sanity
 project ID, dataset, Viewer token, and webhook secret.
 
+For Authors, create a second ordinary CMS collection named `Authors`, set
+`FRAMER_AUTHORS_COLLECTION_ID` to its ID, and run `npm run framer:configure:authors`. Use the same
+Sanity webhook with projection `{ "_id": _id, "_type": _type }` and filter:
+`_type in ["article", "author"]`.
+
+To backfill the direct unmanaged collections after a bulk Sanity import, pull the Vercel production
+env vars into a separate ignored file (preserving any existing `.env.local`) and run:
+
+```powershell
+vercel env pull .env.sync.local --environment=production
+$env:SYNC_ENV_FILE = '.env.sync.local'
+npm run framer:sync:all -- --dry-run
+npm run framer:sync:all
+```
+
+The dry run reports Sanity counts and planned stale-item cleanup without writing to Framer. Review
+the counts before running the live command. The live run upserts in batches by Sanity ID and prunes
+only existing Framer items that carry a Sanity ID but no longer exist in Sanity. It preserves
+manually created Framer items without a Sanity ID. Run this from the service project root; it is
+separate from `npm run sync:all`, which writes to Airtable.
+
+The command writes 25 items per request and reconnects every 100 items by default to limit the
+effect of long-lived Server API connections closing. Both settings can be adjusted with
+`--batch-size=N` and `--session-size=N`; rerunning is safe because items are matched by Sanity ID.
+
 ---
 
 ## 0. What you need before starting
@@ -221,7 +246,29 @@ This makes "Publish in Sanity → appears in Framer" automatic. Skip if you're h
 
 ---
 
-## 8. Everyday use
+## 8. Scheduled Framer site publish
+
+The Sanity webhook updates CMS items. A GitHub Actions workflow checks hourly and calls the
+Vercel publish endpoint; the endpoint republishes Framer when the configured interval is due.
+Set `FRAMER_PUBLISH_INTERVAL_HOURS` in Vercel to an integer from `1` to `24`; it defaults to `24`
+(once daily).
+
+1. Deploy the latest `cc-sync` code to Vercel. The GitHub workflow calls
+   `https://cc-sync-eight.vercel.app/api/publish`.
+2. Add `CRON_SECRET` to Vercel Environment Variables as a long random value. Set
+   `FRAMER_PUBLISH_INTERVAL_HOURS` to your desired interval, such as `3`, then redeploy.
+3. Add an Actions repository secret named `CRON_SECRET` with the exact same value configured
+   in Vercel: **Settings → Secrets and variables → Actions → New repository secret**.
+4. The production alias currently uses Standard Protection, which allows production URLs through;
+   no Vercel protection setting needs to be disabled. If you later protect production URLs, create
+   a **Protection Bypass for Automation** secret in Vercel and add it to GitHub as
+   `VERCEL_AUTOMATION_BYPASS_SECRET`.
+5. Commit and push `.github/workflows/framer-publish.yml` to the repository's default branch. The
+   workflow runs hourly; the API uses `FRAMER_PUBLISH_INTERVAL_HOURS` to decide whether to publish.
+6. Check the repository's **Actions** tab for workflow results and Vercel Logs for publish details.
+   GitHub scheduled workflows may start late during periods of high load.
+
+## 9. Everyday use
 
 | Task | Do this |
 |---|---|

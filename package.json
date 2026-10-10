@@ -4,15 +4,21 @@
   "type": "module",
   "description": "Sanity -> Framer CMS sync service (Critical Collective)",
   "scripts": {
+    "test": "node --test tests/*.test.js",
     "sync:all": "node syncAll.js",
+    "framer:sync:all": "node scripts/syncFramerAll.js",
     "framer:collections": "node scripts/listFramerCollections.js",
-    "framer:configure": "node scripts/configureFramerCollection.js"
+    "framer:configure": "node scripts/configureFramerCollection.js",
+    "framer:configure:authors": "node scripts/configureAuthorsCollection.js"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@sanity/client": "^6.21.0",
     "@sanity/webhook": "^4.0.2",
     "dotenv": "^16.4.5",
-    "framer-api": "^0.1.30"
+    "framer-api": "0.1.30",
+    "jose": "^6.1.0"
   }
 }
